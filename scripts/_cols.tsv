@@ -1,0 +1,69 @@
+app_user	id	bigint	NO	PRI		用户编号
+app_user	login	varchar(32)	NO	UNI		登录名
+app_user	password	varchar(64)	NO		123456	口令（课程演示用明文，生产须改哈希）
+app_user	display_name	varchar(32)	NO			姓名
+app_user	role	varchar(16)	NO		MEMBER	角色 MEMBER/MANAGER/ADMIN
+app_user	credit	int	NO		100	信用分，初始 100，低于 60 不得预约
+app_user	balance	decimal(10,2)	NO		200.00	余额
+app_user	monthly_expire_date	date	YES			月卡有效期截止日，有效期内计费为 0
+app_user	day_pass_date	date	YES			包天卡所属日期，当天固定 30 元且再次入座不重复扣费
+app_user	created_at	datetime	NO		CURRENT_TIMESTAMP	创建时间
+bill_order	id	bigint	NO	PRI		账单编号
+bill_order	order_no	varchar(32)	NO	UNI		账单号
+bill_order	reservation_id	bigint	YES	MUL		关联预约；与 kind 组成幂等键，同一次超时/签退只允许一条
+bill_order	user_id	bigint	NO	MUL		用户
+bill_order	kind	varchar(16)	NO			类型 USAGE按分钟计费/OVERTIME超时违约金/DAY_CARD包天卡
+bill_order	minutes	int	NO		0	计费分钟数
+bill_order	unit_price	decimal(10,2)	NO		0.00	计费单价
+bill_order	amount	decimal(10,2)	NO		0.00	金额（元，保留两位小数）
+bill_order	card_type	varchar(16)	NO		NONE	卡类型 NONE/MONTHLY/DAY
+bill_order	source	varchar(8)	NO		LOCAL	金额来源 CLOUD=云端函数计算 LOCAL=本地兜底
+bill_order	created_at	datetime	NO			生成时间
+complaint	id	bigint	NO	PRI		投诉编号
+complaint	user_id	bigint	NO			投诉人
+complaint	content	varchar(500)	NO			投诉内容
+complaint	status	varchar(16)	NO	MUL	PENDING	状态 PENDING待处理/DONE已处理
+complaint	handle_result	varchar(500)	YES			处理结果；未填写不得置为 DONE
+complaint	handler_id	bigint	YES			处理人
+complaint	created_at	datetime	NO			提交时间
+complaint	handled_at	datetime	YES			处理时间
+credit_log	id	bigint	NO	PRI		流水编号
+credit_log	user_id	bigint	NO	MUL		用户
+credit_log	delta	int	NO			变动值，如 -10
+credit_log	reason	varchar(64)	NO			变动原因
+credit_log	idem_key	varchar(128)	NO	UNI		幂等键，超时为 TIMEOUT-预约号
+credit_log	created_at	datetime	NO			发生时间
+price_change	id	bigint	NO	PRI		记录编号
+price_change	room_id	bigint	NO			自习室
+price_change	occupied	int	NO			占用座位数
+price_change	total_seats	int	NO			座位总数
+price_change	occupancy_rate	decimal(5,4)	NO			上座率＝占用÷总数
+price_change	old_price	decimal(10,2)	NO			原单价
+price_change	new_price	decimal(10,2)	NO			新单价
+price_change	operator	varchar(32)	NO			操作人
+price_change	created_at	datetime	NO	MUL		变价时间
+reservation	id	bigint	NO	PRI		预约编号
+reservation	user_id	bigint	NO	MUL		预约人
+reservation	seat_id	bigint	NO	MUL		座位
+reservation	status	varchar(16)	NO	MUL		RESERVED已预约/IN_USE使用中/TEMP_LEAVE暂离/CHECKED_OUT已签退/EXPIRED超时释放/CANCELLED已取消
+reservation	created_at	datetime	NO			预约时间
+reservation	expire_at	datetime	NO			签到截止时间（预约后 15 分钟）
+reservation	checkin_at	datetime	YES			签到时间
+reservation	leave_at	datetime	YES			暂离时间
+reservation	checkout_at	datetime	YES			签退时间
+reservation	unit_price	decimal(10,2)	NO			开始使用时的单价快照，涨价只影响之后开始的
+room	id	bigint	NO	PRI		自习室编号
+room	name	varchar(64)	NO			自习室名称
+room	seat_count	int	NO		10	座位总数
+room	base_price	decimal(10,2)	NO		4.00	基准单价（元/小时）
+room	current_price	decimal(10,2)	NO		4.00	当前生效单价（元/小时）
+room	updated_at	datetime	NO		CURRENT_TIMESTAMP	更新时间
+seat	id	bigint	NO	PRI		座位编号
+seat	room_id	bigint	NO	MUL		所属自习室
+seat	code	varchar(16)	NO			座位号 A01~A10
+seat	status	varchar(16)	NO	MUL	FREE	状态 FREE空闲/RESERVED已预约/IN_USE使用中
+seat	current_user_id	bigint	YES			当前使用人
+seat	leave_flag	tinyint	NO		0	1=暂离中（仍占座）
+seat	version	int	NO		0	乐观锁版本
+sim_clock	id	bigint	NO	PRI		固定为 1
+sim_clock	offset_seconds	bigint	NO		0	相对真实时间的偏移秒数，用于演示 15 分钟超时

@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: studyroom-backend
+  datasource:
+    url: jdbc:mysql://localhost:3306/reading_room?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: ${STUDY_DB_USER:study}
+    password: ${STUDY_DB_PASSWORD:Study@123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+
+app:
+  billing:
+    hourly-price: 4.00
+    day-card-price: 30.00
+    overtime-minutes: 15
+    credit-penalty: 10
+    min-credit: 60
+    occupancy-threshold: 0.8
+    surge-factor: 1.2
+  cloud:
+    endpoint: ${FG_ENDPOINT:}
+    timeout-ms: 3000
+
+logging:
+  level:
+    com.studyroom: INFO
