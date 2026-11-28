@@ -1,6 +1,6 @@
 # 智能共享自习室管理系统（项目编号 26）
 
-软件工程实验 · 课程项目。当前阶段：**数据库设计与初始化脚本已完成**，后端 / 前端代码骨架已就位但按分工尚未开始开发。
+软件工程实验 · 课程项目。当前阶段：**系统已实现并跑通端到端验证**（后端 22 个 Java 文件、前端 6 个页面、两个云函数；`scripts\e2e.ps1` 64 项断言全过）。
 
 ## 一、目录结构
 
@@ -16,12 +16,15 @@ F:\workspace\SE\Lab                 ← 设计与交付文档（提交作业时�
    │  ├─ init.sql                  建库建表 + 初始数据（1 间自习室、10 座、7 账号、单价 4.00）
    │  └─ test_data.sql             演示数据（一天的预约/超时/月卡/包天卡/投诉/变价）
    ├─ scripts
+   │  ├─ start_all.ps1             一键启动（云函数模拟 + 后端 + 前端）
+   │  ├─ stop_all.ps1              一键停止三个进程
+   │  ├─ e2e.ps1                   端到端回归（64 项断言，需先 reset_db）
    │  ├─ reset_db.ps1              一键重置数据库（加 -Demo 连演示数据一起写）
    │  ├─ make_meta.ps1             从 information_schema 导出字段与索引元数据
    │  ├─ build_db_doc.py           由元数据生成《数据库设计说明.md》
    │  └─ build_er.py               生成 ER 图
-   ├─ backend                      Spring Boot 3.3.5 + JDK 21（IDEA 打开，暂未开发）
-   ├─ frontend\reading-room-front   Vue 3 + Vite 5（VS Code 打开，暂未开发）
+   ├─ backend                      Spring Boot 3.3.5 + JDK 21（22 个 Java 文件，6 个 Controller）
+   ├─ frontend\reading-room-front   Vue 3 + Vite 5（6 个页面：登录/座位/我的/投诉/看板/调价）
    ├─ cloud                        FunctionGraph 云函数（Python 3.9 事件函数）
    ├─ docs                         测试用例与结果、演示脚本、系统实现说明
    ├─ test / video                 测试截图、演示视频（本地，不入库）
@@ -102,7 +105,28 @@ python scripts\build_er.py
 - [ ] 功能演示视频（`video`，分工确定后录制）
 - [ ] 三条 AI 使用记录（见《项目开发计划》附录）
 
-## 六、当前状态
+## 六、快速开始
 
-- 数据库：9 张表、69 个字段全部带注释，唯一键保证幂等（`bill_order.uk_order_res_kind`、`credit_log.uk_credit_idem`），演示数据自检通过（5 笔订单、营收 36.00、客单价 7.20、复购 1）。
-- 后端 / 前端：代码骨架在 `backend`、`frontend\reading-room-front`，**尚未按分工继续开发**，暂不纳入本次交付。
+```powershell
+# 1) 初始化数据库（首次或需要干净数据时）
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\reset_db.ps1 -Demo
+
+# 2) 一键启动（云函数模拟 9100 + 后端 8080 + 前端 5173）
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\start_all.ps1
+
+# 3) 浏览器打开
+#    http://127.0.0.1:5173/      演示账号 s001 / s003 / s004 / s005 / m001 / a001，口令 123456
+
+# 4) 停止
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\stop_all.ps1
+```
+
+`start_all.ps1` 会：检查 MySQL95 → 起 `scripts\mock_fg.py`（本地模拟 FunctionGraph，端口 9100）→ 若 `target\*.jar` 不存在则用 mvn 打包并以 `FG_ENDPOINT` 指向模拟函数 → 起 Vite（5173，`/api` 代理到 8080）。日志分别在 `backend\serve.log`、`scripts\mock_fg.out.log`、`frontend\reading-room-front\dev.out.log`。
+
+## 七、当前状态
+
+- 数据库：9 张表、69 个字段全部带注释；唯一键保证幂等（`bill_order.uk_order_res_kind`、`credit_log.uk_credit_idem`）；`-Demo` 演示数据为 5 笔订单、营收 36.00、客单价 7.20、复购 1。
+- 后端：`com.studyroom` 下 22 个类（6 个 Controller、8 个 Service、BillingMath 核心算法、ClockService 模拟时钟、CloudBillingClient 云端计费与降级）。
+- 前端：Vue 3 + Element Plus，6 个页面，顶栏带模拟时钟（+15/+30/重置）。
+- 云函数：`cloud\functiongraph\billing`（计费）与 `cloud\functiongraph\timeout_release`（每日超时释放），本地用 `scripts\mock_fg.py` 模拟同一份 handler。
+- 验证：`scripts\e2e.ps1` 在干净库上 **64 项断言全过**（记录 `scripts\_e2e.log`），`mvn test` 6 个单元测试通过。

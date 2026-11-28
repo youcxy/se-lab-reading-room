@@ -40,6 +40,12 @@
       <artifactId>mysql-connector-j</artifactId>
       <scope>runtime</scope>
     </dependency>
+    <!-- 华为云 FunctionGraph 官方 SDK：用 AK/SK 签名直调同步执行 API，无需购买 APIG 实例 -->
+    <dependency>
+      <groupId>com.huaweicloud.sdk</groupId>
+      <artifactId>huaweicloud-sdk-functiongraph</artifactId>
+      <version>3.1.225</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>

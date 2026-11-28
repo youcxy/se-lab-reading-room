@@ -23,8 +23,19 @@ app:
     occupancy-threshold: 0.8
     surge-factor: 1.2
   cloud:
+    # 通路 2：HTTP 触发器 URL / 本地模拟器（旧部署兼容）。未启用 AK/SK 时使用。
     endpoint: ${FG_ENDPOINT:}
     timeout-ms: 3000
+    # 通路 1：AK/SK 直调 FunctionGraph 同步执行 API（真云端，无需 APIG）。
+    # 四个密钥/标识一律从环境变量读取，禁止写进仓库；详见 docs/GitHub与华为云配置步骤.md 第八章。
+    ak: ${FG_SDK_AK:}
+    sk: ${FG_SDK_SK:}
+    project-id: ${FG_SDK_PROJECT_ID:}
+    function-urn: ${FG_SDK_FUNCTION_URN:}
+    function-name: ${FG_SDK_FUNCTION_NAME:}
+    region: ${FG_SDK_REGION:cn-north-4}
+    # 仅本地联调覆盖 SDK endpoint 时使用，正式部署留空
+    sdk-endpoint: ${FG_SDK_ENDPOINT:}
 
 logging:
   level:

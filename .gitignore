@@ -21,6 +21,8 @@ node_modules/
 logs/
 tmp/
 .cache/
+__pycache__/
+.workbuddy/
 
 # ===== IDE =====
 .idea/

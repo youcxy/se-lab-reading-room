@@ -79,4 +79,10 @@ public class ReservationController {
     public ApiResult<CloudBillingClient.Quote> quote(@RequestBody QuoteRequest req) {
         return ApiResult.ok(cloud.quote(req.unitPrice(), req.minutes()));
     }
+
+    /** 部署自检：返回当前云端计费通路（不含任何密钥）。 */
+    @GetMapping("/cloud/status")
+    public ApiResult<CloudBillingClient.Status> cloudStatus() {
+        return ApiResult.ok(cloud.status());
+    }
 }

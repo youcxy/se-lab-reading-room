@@ -38,6 +38,21 @@ const quote = ref(null)
 const timeoutResult = ref(null)
 const busyQuote = ref(false)
 const busyTimeout = ref(false)
+// 云端计费通路自检：区分「真·FunctionGraph」与「本地模拟器」，便于答辩录屏取证
+const cloudStatus = ref(null)
+const cloudModeText = {
+  FUNCTIONGRAPH_AKSK: '华为云 FunctionGraph（AK/SK 直调）',
+  HTTP_ENDPOINT: 'HTTP 端点（本地模拟器 / APIG）',
+  LOCAL: '本地计算（未配置云端）'
+}
+
+async function loadCloudStatus() {
+  try {
+    cloudStatus.value = await http.get('/cloud/status')
+  } catch (e) {
+    cloudStatus.value = null
+  }
+}
 
 async function runQuote() {
   busyQuote.value = true
@@ -70,7 +85,10 @@ async function runTimeout() {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  loadCloudStatus()
+})
 </script>
 
 <template>
@@ -123,7 +141,15 @@ onMounted(load)
     </el-card>
 
     <el-card style="margin-top: 12px">
-      <template #header>云函数（FunctionGraph）演示</template>
+      <template #header>
+        <div class="head">
+          <span>云函数（FunctionGraph）演示</span>
+          <el-tag v-if="cloudStatus" size="small"
+                  :type="cloudStatus.mode === 'FUNCTIONGRAPH_AKSK' ? 'success' : 'warning'">
+            当前通路：{{ cloudModeText[cloudStatus.mode] || cloudStatus.mode }}
+          </el-tag>
+        </div>
+      </template>
       <el-row :gutter="16">
         <el-col :span="12">
           <p class="label">① 手工调用计费函数（金额 = 单价 × 分钟 ÷ 60）</p>
